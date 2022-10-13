@@ -25,7 +25,7 @@ Ensure your environment has programatic access setup (e.g. configure a local env
 ### Clone this Git Repository
 Clone this repository using git. e.g.:
 ```bash
-git clone https://github.com/mkrauklis/aws-amplify-codepipeline-db-migrations.git
+git clone https://github.com/innovativeSol/solution-amplify-with-database-migrations.git
 ```
 
 ### Optional: Update VPC CIDR
