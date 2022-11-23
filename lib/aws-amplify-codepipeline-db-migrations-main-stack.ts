@@ -180,16 +180,19 @@ export class AwsAmplifyCodepipelineDbMigrationsMainStack extends cdk.Stack {
           },
           'phases': {
             'install':{
+              'runtime-versions':{
+                'python': '3.8',
+                'nodejs': '12'
+              },
               'commands': [
-                'npm install -g @aws-amplify/cli',
-                ]
+                'npm install -g @aws-amplify/cli', // Specify an Amplify CLI version here, or add to frontend npm dependencies
+                'npm install'
+              ]
             },
             'build':{
               'commands': [
-                'update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.8 11',
-                'amplify init --yes --amplify "{\\"envName\\":\\"dev\\",\\"defaultEditor\\":\\"code\\"}" --providers "{\\"awscloudformation\\":{\\"useProfile\\":false,\\"accessKeyId\\":\\"$AMPLIFY_USER_ACCESS_KEY_ID\\",\\"secretAccessKey\\":\\"$AMPLIFY_USER_SECRET_ACCESS_KEY\\",\\"region\\":\\"us-east-1\\"}}"',
-                'npm install',
-                'amplify publish --yes',
+                'npx amplify init --yes --amplify "{\\"envName\\":\\"dev\\",\\"defaultEditor\\":\\"code\\"}" --providers "{\\"awscloudformation\\":{\\"useProfile\\":false,\\"accessKeyId\\":\\"$AMPLIFY_USER_ACCESS_KEY_ID\\",\\"secretAccessKey\\":\\"$AMPLIFY_USER_SECRET_ACCESS_KEY\\",\\"region\\":\\"us-east-1\\"}}"',
+                'npx amplify publish --yes',
                 ]
             },
           }
