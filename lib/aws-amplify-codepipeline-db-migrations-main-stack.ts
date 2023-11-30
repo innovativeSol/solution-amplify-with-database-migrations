@@ -36,7 +36,7 @@ export class AwsAmplifyCodepipelineDbMigrationsMainStack extends cdk.Stack {
         ]
       }
     );
-    
+
     // Create Security Groups
     const codeBuildSecurityGroup = new ec2.SecurityGroup(
       this, "CodeBuildSecurityGroup", {
@@ -52,9 +52,17 @@ export class AwsAmplifyCodepipelineDbMigrationsMainStack extends cdk.Stack {
       codeBuildSecurityGroup,
       ec2.Port.tcp(5432),);
 
+
     // Create Database Cluster
     const databaseCluster = this.createDatabaseCluster(this, vpc, databaseSecurityGroup, props);
-    
+  
+    // Create Bastion Host
+    const bastionHost = new ec2.BastionHostLinux(this, 'BastionHost', {
+      vpc,
+      securityGroup: codeBuildSecurityGroup,
+      instanceName: `${props?.stackName}-BastionHost`,
+    });
+
     // Create Amplify Stack
     const codeCommitRepository = this.createCodeCommitRepository(this, props);
 
@@ -86,7 +94,7 @@ export class AwsAmplifyCodepipelineDbMigrationsMainStack extends cdk.Stack {
       'ServerlessCluster',
       {
         clusterIdentifier: `${props?.stackName}-ServerlessCluster`,
-        engine: rds.DatabaseClusterEngine.AURORA_POSTGRESQL,
+        engine: rds.DatabaseClusterEngine.auroraPostgres({version: rds.AuroraPostgresEngineVersion.VER_11_13}),
         vpc,
         vpcSubnets: {
           subnetType: ec2.SubnetType.PRIVATE,
@@ -103,7 +111,7 @@ export class AwsAmplifyCodepipelineDbMigrationsMainStack extends cdk.Stack {
           minCapacity: rds.AuroraCapacityUnit.ACU_2,
           maxCapacity: rds.AuroraCapacityUnit.ACU_2,
         },
-        parameterGroup: rds.ParameterGroup.fromParameterGroupName(scope, 'ParameterGroup', 'default.aurora-postgresql10'),
+        parameterGroup: rds.ParameterGroup.fromParameterGroupName(scope, 'ParameterGroup', 'default.aurora-postgresql11'),
       }
     );
   }
@@ -192,7 +200,8 @@ export class AwsAmplifyCodepipelineDbMigrationsMainStack extends cdk.Stack {
             'build':{
               'commands': [
                 'npx amplify init --yes --amplify "{\\"envName\\":\\"dev\\",\\"defaultEditor\\":\\"code\\"}" --providers "{\\"awscloudformation\\":{\\"useProfile\\":false,\\"accessKeyId\\":\\"$AMPLIFY_USER_ACCESS_KEY_ID\\",\\"secretAccessKey\\":\\"$AMPLIFY_USER_SECRET_ACCESS_KEY\\",\\"region\\":\\"us-east-1\\"}}"',
-                'npx amplify publish --yes',
+                'npx amplify configure project --yes --amplify "{\\"envName\\":\\"dev\\",\\"defaultEditor\\":\\"code\\"}" --providers "{\\"awscloudformation\\":{\\"useProfile\\":false,\\"accessKeyId\\":\\"$AMPLIFY_USER_ACCESS_KEY_ID\\",\\"secretAccessKey\\":\\"$AMPLIFY_USER_SECRET_ACCESS_KEY\\",\\"region\\":\\"us-east-1\\"}}" --frontend "{\\"frontend\\":\\"javascript\\",\\"framework\\":\\"react\\",\\"config\\":{\\"SourceDir\\":\\"src\\",\\"DistributionDir\\":\\"build\\",\\"BuildCommand\\":\\"npm run-script build\\",\\"StartCommand\\":\\"npm run-script start\\"}}"',
+                'npx amplify publish --invalidateCloudFront --yes'
                 ]
             },
           }
@@ -240,10 +249,10 @@ export class AwsAmplifyCodepipelineDbMigrationsMainStack extends cdk.Stack {
               'commands': [
                 'python3 -m venv env',
                 'source env/bin/activate',
-                'pip install psycopg2-binary',
-                'pip install postgres',
-                'pip install SQLAlchemy',
-                'pip install alembic',
+                'pip install psycopg2-binary==2.9.3',
+                'pip install postgres==4.0',
+                'pip install SQLAlchemy==1.4.41',
+                'pip install alembic==1.11.1',
                 'pip install boto3',
                 'pip install pytest',
                 'sed -i "s/sqlalchemy.url = [^\\n]*/sqlalchemy.url = postgresql:\\/\\/$DATABASE_SECRET_USERNAME:$DATABASE_SECRET_PASSWORD@$DATABASE_SECRET_HOST\\/$DATABASE_SECRET_DBNAME/" alembic.ini',
