@@ -60,7 +60,7 @@ export class AwsAmplifyCodepipelineDbMigrationsMainStack extends cdk.Stack {
     const bastionHost = new ec2.BastionHostLinux(this, 'BastionHost', {
       vpc,
       securityGroup: codeBuildSecurityGroup,
-      instanceName: `${props?.stackName}-POCBastionHost`,
+      instanceName: `${props?.stackName}-BastionHost`,
     });
 
     // Create Amplify Stack
